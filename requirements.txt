@@ -1,0 +1,9 @@
+pygame
+pytz
+loguru
+schedule
+pytest
+todoist-python
+pillow
+dotmap
+python-dotenv
