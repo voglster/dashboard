@@ -14,7 +14,9 @@ Dashboard App that turns a raspberry pi and a tv into a useful application
  
 # Ideas:
  - Download and sync images from google drive/dropbox/i-cloud folder and scan/rotate them  
- 
+ - Reduce the bar to get up and running
+    - Prebuilt raspbian image
+    - WYSIWYG config editor? pygame drag and drop?
 
  
 
