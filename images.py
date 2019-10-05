@@ -1,16 +1,30 @@
 import urllib.request
 from PIL import Image, ImageFilter, ImageEnhance
+from tempfile import TemporaryDirectory
+from contextlib import contextmanager
 
 
-def get_file():
-    url = "https://source.unsplash.com/1280x1024/?nature"
-    urllib.request.urlretrieve(url, "dynamic.jpg")
-    img = Image.open("dynamic.jpg")
+@contextmanager
+def background_file():
+    with TemporaryDirectory() as td:
+        yield get_file(td)
+
+
+def blur_image(path):
+    img = Image.open(path)
     img = img.filter(ImageFilter.GaussianBlur(radius=5))
     img = ImageEnhance.Contrast(img).enhance(0.8)
-    img.save("dynamic.jpg", "JPEG")
+    img.save(path, "JPEG")
 
-    return "./dynamic.jpg", get_text_color("dynamic.jpg")
+
+def get_file(path="./"):
+    file_path = f"{path}dynamic.jpg"
+    url = "https://source.unsplash.com/1280x1024/?nature"
+    urllib.request.urlretrieve(url, file_path)
+
+    blur_image(file_path)
+
+    return file_path, get_text_color(file_path)
 
 
 def compute_average_image_color(img):
@@ -29,19 +43,17 @@ def compute_average_image_color(img):
             b_total += b
             count += 1
 
-    return (r_total / count, g_total / count, b_total / count)
+    return r_total / count, g_total / count, b_total / count
 
 
-def get_text_color(img):
-    img = Image.open(img)
-    img = img.resize((50, 50))
-    average_color = compute_average_image_color(img)
-    red, green, blue = average_color
+def get_text_color(image_path):
+    img = Image.open(image_path).resize((50, 50))
+    red, green, blue = compute_average_image_color(img)
     if (red * 0.299 + green * 0.587 + blue * 0.114) > 186:
         return 0, 0, 0
     return 255, 255, 255
 
 
 if __name__ == "__main__":
-
-    print(get_text_color("dynamic.jpg"))
+    with background_file() as (path, color):
+        print(get_text_color(path))

@@ -1,7 +1,15 @@
 import requests
 from settings import config
+from tempfile import TemporaryDirectory
+from contextlib import contextmanager
 
 assert config.weather_api_key, "No weather api key have you setup your environment?"
+
+
+@contextmanager
+def download_weather_icon(code):
+    with TemporaryDirectory() as d:
+        yield get_weather_icon(code, d)
 
 
 def get_current():
@@ -16,12 +24,12 @@ def get_forecast():
     return requests.get(url).json()
 
 
-def get_weather_icon(code):
+def get_weather_icon(code, path="./"):
     import urllib.request
 
     url = f"http://openweathermap.org/img/wn/{code}@2x.png"
-    urllib.request.urlretrieve(url, "weather_ico.png")
-    return "./weather_ico.png"
+    urllib.request.urlretrieve(url, f"{path}weather_{code}.png")
+    return f"{path}weather_{code}.png"
 
 
 def k_to_f(val):
@@ -31,9 +39,8 @@ def k_to_f(val):
 def get():
     f = get_current()
     temp = round(k_to_f(f["main"]["temp"]), 1)
-    ico_num = f["weather"][0]["icon"]
-    get_weather_icon(ico_num)
-    return f"{ temp }f", f["weather"][0]["description"]
+    weather_icon_code = f["weather"][0]["icon"]
+    return f"{ temp }f", f["weather"][0]["description"], weather_icon_code
 
 
 if __name__ == "__main__":
@@ -42,5 +49,3 @@ if __name__ == "__main__":
     q = get_current()
 
     pprint(q)
-
-    # print(round(k_to_f(q["main"]["temp"]), 1))

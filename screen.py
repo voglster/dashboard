@@ -58,7 +58,7 @@ class Dashboard:
             self.screen, self.screen_dimensions = setup_frame_buffer()
         else:
             self.screen, self.screen_dimensions = setup_dev_screen()
-        self.bg_img = pygame.image.load("dashboard_bg.bmp")
+        self.bg_img = None
         self.done_img = pygame.image.load("./media/relax.png")
         pygame.mouse.set_visible(False)
         self.clear_screen()
@@ -84,7 +84,8 @@ class Dashboard:
         self.screen.fill((0, 0, 0))
 
     def render_bg(self):
-        self.screen.blit(self.bg_img, (0, 0))
+        if self.bg_img:
+            self.screen.blit(self.bg_img, (0, 0))
 
     def show_time(self):
         now = (
@@ -161,22 +162,22 @@ class Dashboard:
         pygame.display.update()
 
     def get_bg(self):
-        from images import get_file
+        from images import background_file
 
-        filename, self.font_color = get_file()
-        self.bg_img = pygame.image.load("dynamic.jpg")
+        with background_file() as (filename, font_color):
+            self.bg_img = pygame.image.load(filename)
+            self.font_color = font_color
 
     def get_weather(self):
-        from weather import get
+        from weather import get, download_weather_icon
 
-        self.temperature_text, self.temperature_text2 = get()
-
-        self.weather_ico = pygame.image.load("weather_ico.png")
+        self.temperature_text, self.temperature_text2, icon_code = get()
+        with download_weather_icon(icon_code) as icon_path:
+            self.weather_ico = pygame.image.load(icon_path)
 
 
 if __name__ == "__main__":
     db = Dashboard()
-
     db.load_tasks()
     db.get_bg()
     db.get_weather()

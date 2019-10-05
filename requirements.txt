@@ -8,3 +8,4 @@ dotmap
 python-dotenv
 python-dateutil
 pytest
+requests
