@@ -9,3 +9,4 @@ python-dotenv
 python-dateutil
 pytest
 requests
+pyowm

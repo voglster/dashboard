@@ -169,10 +169,10 @@ class Dashboard:
             self.font_color = font_color
 
     def get_weather(self):
-        from weather import get, download_weather_icon
+        from weather import get, downloaded_weather_icon
 
         self.temperature_text, self.temperature_text2, icon_code = get()
-        with download_weather_icon(icon_code) as icon_path:
+        with downloaded_weather_icon(icon_code) as icon_path:
             self.weather_ico = pygame.image.load(icon_path)
 
 
