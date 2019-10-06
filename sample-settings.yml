@@ -1,0 +1,34 @@
+qboard:
+  timezone: "US/Central"
+modules:
+  - name: "unsplash"
+    id: "unsplash1"
+    run_every: 3 minutes
+  - name: "clock"
+    id: "clock1"
+    anchor_point: "topright"
+    anchor_to:
+      id: "screen"
+      point: "topright"
+    timezone: "US/Central"
+    format: "%I:%M %p"
+  - name: "weather"
+    id: "weather1"
+    anchor_point: "topleft"
+    anchor_to:
+      id: "screen"
+      point: "topleft"
+    api_key: REDACTED
+    gps: 32.942664, -97.191749
+    run_every: 10 minutes
+  - name: "todoist"
+    id: "todoist1"
+    anchor_point: "center"
+    anchor_to:
+      id: "screen"
+      point: "center"
+    run_every: 1 minutes
+    api_key: REDACTED
+
+
+

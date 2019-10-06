@@ -2,6 +2,23 @@ import urllib.request
 from PIL import Image, ImageFilter, ImageEnhance
 from tempfile import TemporaryDirectory
 from contextlib import contextmanager
+import pygame
+
+
+class UnSplashImage:
+    def __init__(self, config, screen):
+        self.config = config
+        self.screen = screen
+        self.bg_img = None
+        self.prepare()
+
+    def prepare(self):
+        with background_file() as (filename, font_color):
+            self.bg_img = pygame.image.load(filename)
+
+    def draw(self):
+        if self.bg_img:
+            self.screen.blit(self.bg_img, (0, 0))
 
 
 @contextmanager

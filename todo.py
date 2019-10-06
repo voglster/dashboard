@@ -2,17 +2,63 @@ from dateutil.parser import parse
 from datetime import datetime
 import todoist
 import pytz
-from settings import config
+import pygame
 
 tz = pytz.timezone("US/Central")
 
 fields = ["content", "priority", "day_order"]
 
-assert config.todoist_api_key, "No todoist api key have you setup your environment?"
+
+def text_objects(text, font, color=(255, 255, 255)):
+    text_surface = font.render(text, True, color)
+    return text_surface, text_surface.get_rect()
 
 
-def get_next_tasks(count=3):
-    api = todoist.TodoistAPI(config.todoist_api_key)
+class Todoist:
+    def __init__(self, config, screen):
+        self.config = config
+        self.screen = screen
+        self.prepare()
+        self.tasks = None
+        self.done_img = pygame.image.load("./media/relax.png")
+
+    def prepare(self):
+        self.tasks = get_next_tasks(5, self.config["api_key"])
+
+    def draw(self):
+        if self.tasks:
+            y = 450
+            for t in self.tasks:
+                if len(t["content"]) > 35:
+                    text = t["content"][:30] + "..."
+                else:
+                    text = t["content"]
+                text_surf, text_rect = text_objects(
+                    text, self.screen.theme.small_text, self.screen.theme.font_color
+                )
+                text_rect.left = 20
+                text_rect.top = y
+                y = text_rect.bottom + 20
+                self.screen.blit(text_surf, text_rect)
+        else:
+            self.screen.blit(self.done_img, (100, 400))
+            text_surf, text_rect = text_objects(
+                "All done!", self.screen.theme.small_text, self.screen.theme.font_color
+            )
+            text_rect.left = 650
+            text_rect.top = 450
+            self.screen.blit(text_surf, text_rect)
+            text_surf, text_rect = text_objects(
+                "Relax", self.screen.theme.small_text, self.screen.theme.font_color
+            )
+            text_rect.left = 650
+            text_rect.top = 550
+            self.screen.blit(text_surf, text_rect)
+
+
+def get_next_tasks(count=3, api_key=None):
+    assert api_key, "You must pass an api key"
+    api = todoist.TodoistAPI(api_key)
     api.sync()
 
     today = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(tz).date()
