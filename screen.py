@@ -1,5 +1,6 @@
 import os
 import sys
+from itertools import product
 import pygame
 import time
 from loguru import logger
@@ -48,26 +49,29 @@ def setup_dev_screen():
 
 class Theme:
     def __init__(self):
-        self.large_text = pygame.font.Font(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 115
-        )
-        self.medium_text = pygame.font.Font(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 80
-        )
-        self.small_text = pygame.font.Font(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", 60
-        )
-        self.tiny_text = pygame.font.Font(
-            "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", 18
-        )
+        self.fonts = {}
+
+        sizes = [(115, "large"), (80, "medium"), (60, "small"), (18, "tiny")]
+
+        types = [
+            ("./media/fonts/LiberationMono-Regular.ttf", "mono"),
+            ("./media/fonts/LiberationSerif-Regular.ttf", "serif"),
+            ("./media/fonts/LiberationSans-Regular.ttf", "sans"),
+        ]
+        for (font_weight, size), (path, font_type) in product(sizes, types):
+            self.fonts[(size, font_type)] = pygame.font.Font(path, font_weight)
+
+        for font_weight, size in sizes:
+            self.fonts[(size, None)] = pygame.font.Font(
+                "./media/fonts/LiberationMono-Regular.ttf", font_weight
+            )
+
         self.font_color = (255, 255, 255)
         self.bg_color = (0, 0, 0)
         pygame.font.init()
 
-    def get_font(self, size, font_type):
-        if size == "tiny":
-            return self.tiny_text
-        return self.large_text
+    def get_font(self, size, font_type=None):
+        return self.fonts.get((size, font_type))
 
     def get_primary_color(self):
         return self.font_color

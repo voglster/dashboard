@@ -35,7 +35,9 @@ class Todoist:
                 else:
                     text = t["content"]
                 text_surf, text_rect = text_objects(
-                    text, self.screen.theme.small_text, self.screen.theme.font_color
+                    text,
+                    self.screen.theme.get_font("small", "serif"),
+                    self.screen.theme.font_color,
                 )
                 text_rect.left = 20
                 text_rect.top = y
@@ -44,13 +46,17 @@ class Todoist:
         else:
             self.screen.blit(self.done_img, (100, 400))
             text_surf, text_rect = text_objects(
-                "All done!", self.screen.theme.small_text, self.screen.theme.font_color
+                "All done!",
+                self.screen.theme.get_font("small", "serif"),
+                self.screen.theme.font_color,
             )
             text_rect.left = 650
             text_rect.top = 450
             self.screen.blit(text_surf, text_rect)
             text_surf, text_rect = text_objects(
-                "Relax", self.screen.theme.small_text, self.screen.theme.font_color
+                "Relax",
+                self.screen.theme.get_font("small", "serif"),
+                self.screen.theme.font_color,
             )
             text_rect.left = 650
             text_rect.top = 550

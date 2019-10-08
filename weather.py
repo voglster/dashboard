@@ -34,19 +34,20 @@ class Weather:
 
     def draw(self):
         theme = self.screen.theme
+        font = self.screen.theme.get_font("small", "serif")
 
         if self.weather_ico and self.temperature_text:
             icon_rect = self.weather_ico.get_rect()
 
             temperature_text_surface, temperature_rect = text_objects(
-                self.temperature_text, theme.small_text, theme.font_color
+                self.temperature_text, font, theme.font_color
             )
 
             temperature_rect.topleft = icon_rect.topright
             temperature_rect.move_ip(10, 0)
 
             description_surf, description_rect = text_objects(
-                self.temperature_text2, theme.small_text, theme.font_color
+                self.temperature_text2, font, theme.font_color
             )
 
             description_rect.topleft = icon_rect.bottomleft
