@@ -28,7 +28,7 @@ class Todoist:
 
     def draw(self):
         if self.tasks:
-            y = 450
+            y = 350
             for t in self.tasks:
                 if len(t["content"]) > 35:
                     text = t["content"][:30] + "..."
