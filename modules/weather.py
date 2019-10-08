@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import urllib.request
 import pyowm
 import pygame
+from util import set_position
 
 
 def text_objects(text, font, color):
@@ -55,13 +56,7 @@ class Weather:
 
             entire_rect = icon_rect.unionall((temperature_rect, description_rect))
 
-            parent_rect = self.screen.rects[self.config["anchor_to"]["id"]]
-            parent_anchor_point = self.config["anchor_to"]["point"].lower()
-            anchor_point = self.config["anchor_point"]
-
-            setattr(
-                entire_rect, anchor_point, getattr(parent_rect, parent_anchor_point)
-            )
+            entire_rect = set_position(entire_rect, self.screen.rects, self.config)
             self.screen.rects[self.config["id"]] = entire_rect
 
             icon_rect.topleft = entire_rect.topleft

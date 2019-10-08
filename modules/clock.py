@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytz
+from util import set_position, parse_color
 
 
 class Clock:
@@ -7,6 +8,14 @@ class Clock:
         self.config = config
         self.screen = screen
         self.expected_tz = pytz.timezone(config.get("timezone"))
+        self.id = self.config.get("id", "clock")
+        font_size = self.config.get("font_size", "large").lower()
+        font_type = self.config.get("font_size", "serif").lower()
+        self.font = self.screen.theme.get_font(font_size, font_type)
+        self.color = parse_color(
+            self.config.get("color", self.screen.theme.get_primary_color())
+        )
+        self.time_format = self.config.get("format", "%I:%M %p")
 
     def prepare(self):
         pass
@@ -16,29 +25,13 @@ class Clock:
             datetime.utcnow()
             .replace(tzinfo=pytz.utc)
             .astimezone(self.expected_tz)
-            .strftime(self.config.get("format", "%I:%M %p"))
+            .strftime(self.time_format)
         )
-        font = self.screen.theme.get_font("large", "mono")
-        color = self.screen.theme.get_primary_color()
 
-        text_surf = font.render(now, True, color)
+        text_surf = self.font.render(now, True, self.color)
         text_rect = text_surf.get_rect()
 
-        parent_rect = self.screen.rects[self.config["anchor_to"]["id"]]
-        parent_anchor_point = self.config["anchor_to"]["point"].lower()
-        anchor_point = self.config["anchor_point"]
+        text_rect = set_position(text_rect, self.screen.rects, self.config)
 
-        # Clever but concise, uses the virtual attributes on PyGame's rect object to align
-        setattr(text_rect, anchor_point, getattr(parent_rect, parent_anchor_point))
-
-        offset_str = self.config.get("offset", "0, 0")
-        x_str, y_str = offset_str.split(",")
-        x = int(x_str)
-        y = int(y_str)
-
-        if x or y:
-            text_rect = text_rect.move(x, y)
-
-        self.screen.rects[self.config["id"]] = text_rect
-
+        self.screen.rects[self.id] = text_rect
         self.screen.blit(text_surf, text_rect)
