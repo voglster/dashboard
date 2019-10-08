@@ -57,11 +57,16 @@ class Theme:
         self.small_text = pygame.font.Font(
             "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", 60
         )
+        self.tiny_text = pygame.font.Font(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", 18
+        )
         self.font_color = (255, 255, 255)
         self.bg_color = (0, 0, 0)
         pygame.font.init()
 
-    def get_font(self, *args):
+    def get_font(self, size, font_type):
+        if size == "tiny":
+            return self.tiny_text
         return self.large_text
 
     def get_primary_color(self):
@@ -110,7 +115,14 @@ class Dashboard:
                 count, time_scale = module_config["run_every"].split(" ")
                 count = int(count)
                 getattr(schedule.every(count), time_scale).do(c.prepare)
+
         self.blit = self.screen.blit
+
+        if config["qboard"].get("debug"):
+            from debug import Debug
+
+            d = Debug(config["qboard"], self)
+            self.modules["debug"] = d
 
     def clear_screen(self):
         self.screen.fill(self.theme.bg_color)
