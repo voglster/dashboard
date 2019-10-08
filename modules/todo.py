@@ -3,6 +3,7 @@ from datetime import datetime
 import todoist
 import pytz
 import pygame
+from util import set_position
 
 tz = pytz.timezone("US/Central")
 
@@ -21,53 +22,85 @@ class Todoist:
         self.prepare()
         self.tasks = None
         self.done_img = pygame.image.load("./media/relax.png")
+        self.v_spacing = config.get("vertical_spacing", 0)
         self.prepare()
 
     def prepare(self):
         self.tasks = get_next_tasks(5, self.config["api_key"])
 
     def draw(self):
-        rects = []
         if self.tasks:
-            y = 350
-            for t in self.tasks:
-                if len(t["content"]) > 35:
-                    text = t["content"][:30] + "..."
-                else:
-                    text = t["content"]
-                text_surf, text_rect = text_objects(
-                    text,
-                    self.screen.theme.get_font("small", "serif"),
-                    self.screen.theme.font_color,
-                )
-                text_rect.left = 20
-                text_rect.top = y
-                y = text_rect.bottom + 20
-                self.screen.blit(text_surf, text_rect)
-                rects.append(text_rect)
+            self.draw_tasks()
         else:
-            self.screen.blit(self.done_img, (100, 400))
-            text_surf, text_rect = text_objects(
-                "All done!",
-                self.screen.theme.get_font("small", "serif"),
-                self.screen.theme.font_color,
-            )
-            text_rect.left = 650
-            text_rect.top = 450
-            self.screen.blit(text_surf, text_rect)
-            rects.append(text_rect)
-            text_surf, text_rect = text_objects(
-                "Relax",
-                self.screen.theme.get_font("small", "serif"),
-                self.screen.theme.font_color,
-            )
-            text_rect.left = 650
-            text_rect.top = 550
-            self.screen.blit(text_surf, text_rect)
-            rects.append(text_rect)
+            self.draw_all_done()
 
-        if rects:
-            self.screen.rects[self.config["id"]] = rects[0].unionall(rects[1:])
+    def task_text(self):
+        for t in self.tasks:
+            if len(t["content"]) > 35:
+                yield t["content"][:30] + "..."
+            else:
+                yield t["content"]
+
+    def draw_tasks(self):
+        drawing_items = []
+        y = 0
+        for text in self.task_text():
+            text_surf, text_rect = text_objects(
+                text,
+                self.screen.theme.get_font("small", "serif"),
+                self.screen.theme.font_color,
+            )
+            text_rect.top = y
+            y = text_rect.bottom + self.v_spacing
+            drawing_items.append((text_rect, text_surf))
+        if drawing_items:
+            q = [x[0] for x in drawing_items]
+            entire_rect = q[0].unionall(q[1:])
+            self.screen.rects[self.config["id"]] = entire_rect
+
+            entire_rect = set_position(entire_rect, self.screen.rects, self.config)
+            x = entire_rect.left
+            y = entire_rect.top
+
+            for rect, surface in drawing_items:
+                rect.topleft = (x, y)
+                y = rect.bottom + self.v_spacing
+                self.screen.blit(surface, rect)
+
+    def draw_all_done(self):
+        done_image_rect = self.done_img.get_rect()
+
+        all_done_surface, all_done_rect = text_objects(
+            "All done!",
+            self.screen.theme.get_font("small", "serif"),
+            self.screen.theme.font_color,
+        )
+        all_done_rect.topleft = done_image_rect.topright
+
+        relax_surf, relax_rect = text_objects(
+            "Relax",
+            self.screen.theme.get_font("small", "serif"),
+            self.screen.theme.font_color,
+        )
+        relax_rect.topleft = all_done_rect.bottomleft
+
+        q = [relax_rect, done_image_rect, all_done_rect]
+
+        entire_rect = q[0].unionall(q[1:])
+        self.screen.rects[self.config["id"]] = entire_rect
+
+        entire_rect = set_position(entire_rect, self.screen.rects, self.config)
+        x = entire_rect.left
+        y = entire_rect.top
+
+        done_image_rect.topleft = (x, y)
+        all_done_rect.topleft = done_image_rect.topright
+        relax_rect.left = all_done_rect.left
+        relax_rect.top = all_done_rect.bottom + self.v_spacing
+
+        self.screen.blit(self.done_img, done_image_rect)
+        self.screen.blit(relax_surf, relax_rect)
+        self.screen.blit(all_done_surface, all_done_rect)
 
 
 def get_next_tasks(count=3, api_key=None):
