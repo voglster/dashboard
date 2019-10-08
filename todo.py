@@ -21,6 +21,7 @@ class Todoist:
         self.prepare()
         self.tasks = None
         self.done_img = pygame.image.load("./media/relax.png")
+        self.prepare()
 
     def prepare(self):
         self.tasks = get_next_tasks(5, self.config["api_key"])
