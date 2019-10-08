@@ -62,6 +62,7 @@ class Weather:
             setattr(
                 entire_rect, anchor_point, getattr(parent_rect, parent_anchor_point)
             )
+            self.screen.rects[self.config["id"]] = entire_rect
 
             icon_rect.topleft = entire_rect.topleft
             temperature_rect.topright = entire_rect.topright

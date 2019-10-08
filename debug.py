@@ -17,7 +17,7 @@ class Debug:
         font = self.screen.theme.get_font("tiny", "mono")
         color = self.screen.theme.get_primary_color()
 
-        text_surf = font.render(self.git_rev, True, color)
+        text_surf = font.render(f"Commit: { self.git_rev }", True, color)
         text_rect = text_surf.get_rect()
 
         parent_rect = self.screen.rects["screen"]

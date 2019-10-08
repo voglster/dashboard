@@ -8,10 +8,10 @@ from collections import namedtuple
 import schedule
 from util import running_on_rpi
 
-from clock import Clock
-from weather import Weather
-from images import UnSplashImage
-from todo import Todoist
+from modules.clock import Clock
+from modules.weather import Weather
+from modules.images import UnSplashImage
+from modules.todo import Todoist
 
 ScreenDim = namedtuple("ScreenDim", "width, height")
 
@@ -96,6 +96,7 @@ class Dashboard:
 
         pygame.mouse.set_visible(False)
 
+        self.debug = config["qboard"].get("debug", False)
         self.theme = Theme()
         self.bg_img = None
         self.clear_screen()
@@ -122,7 +123,7 @@ class Dashboard:
 
         self.blit = self.screen.blit
 
-        if config["qboard"].get("debug"):
+        if self.debug:
             from debug import Debug
 
             d = Debug(config["qboard"], self)
@@ -134,7 +135,20 @@ class Dashboard:
     def refresh_screen(self):
         for module in self.modules.values():
             module.draw()
+        if self.debug:
+            self.draw_module_rects()
         pygame.display.update()
+
+    def draw_module_rects(self):
+        for module_instance_id, rect in self.rects.items():
+            if module_instance_id == "screen":
+                pass
+            pygame.draw.lines(
+                self.screen,
+                (255, 255, 255),
+                True,
+                [rect.topleft, rect.topright, rect.bottomright, rect.bottomleft],
+            )
 
 
 if __name__ == "__main__":

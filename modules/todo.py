@@ -27,6 +27,7 @@ class Todoist:
         self.tasks = get_next_tasks(5, self.config["api_key"])
 
     def draw(self):
+        rects = []
         if self.tasks:
             y = 350
             for t in self.tasks:
@@ -43,6 +44,7 @@ class Todoist:
                 text_rect.top = y
                 y = text_rect.bottom + 20
                 self.screen.blit(text_surf, text_rect)
+                rects.append(text_rect)
         else:
             self.screen.blit(self.done_img, (100, 400))
             text_surf, text_rect = text_objects(
@@ -53,6 +55,7 @@ class Todoist:
             text_rect.left = 650
             text_rect.top = 450
             self.screen.blit(text_surf, text_rect)
+            rects.append(text_rect)
             text_surf, text_rect = text_objects(
                 "Relax",
                 self.screen.theme.get_font("small", "serif"),
@@ -61,6 +64,10 @@ class Todoist:
             text_rect.left = 650
             text_rect.top = 550
             self.screen.blit(text_surf, text_rect)
+            rects.append(text_rect)
+
+        if rects:
+            self.screen.rects[self.config["id"]] = rects[0].unionall(rects[1:])
 
 
 def get_next_tasks(count=3, api_key=None):
