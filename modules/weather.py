@@ -35,7 +35,7 @@ class Weather:
 
     def draw(self):
         theme = self.screen.theme
-        font = self.screen.theme.get_font("small", "serif")
+        font = self.screen.theme.get_font("small", "sans")
 
         if self.weather_ico and self.temperature_text:
             icon_rect = self.weather_ico.get_rect()

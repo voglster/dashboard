@@ -40,33 +40,39 @@ def setup_frame_buffer():
     return screen, screen_dim
 
 
-def setup_dev_screen():
-    dims = ScreenDim(1280, 1024)
+def setup_dev_screen(width=1280, height=1024):
+    dims = ScreenDim(width, height)
     pygame.init()
     screen = pygame.display.set_mode(dims)
     return screen, dims
 
 
-class Theme:
-    def __init__(self):
-        self.fonts = {}
+default_font_weights = {"large": 115, "medium": 80, "small": 60, "tiny": 18}
 
-        sizes = [(115, "large"), (80, "medium"), (60, "small"), (18, "tiny")]
+
+class Theme:
+    def __init__(self, theme):
+        self.fonts = {}
+        theme = theme or {}
+
+        sizes = theme.get("font_weights", default_font_weights)
 
         types = [
             ("./media/fonts/LiberationMono-Regular.ttf", "mono"),
             ("./media/fonts/LiberationSerif-Regular.ttf", "serif"),
             ("./media/fonts/LiberationSans-Regular.ttf", "sans"),
         ]
-        for (font_weight, size), (path, font_type) in product(sizes, types):
+        for (size, font_weight), (path, font_type) in product(sizes.items(), types):
             self.fonts[(size, font_type)] = pygame.font.Font(path, font_weight)
 
-        for font_weight, size in sizes:
+        for size, font_weight in sizes.items():
             self.fonts[(size, None)] = pygame.font.Font(
                 "./media/fonts/LiberationMono-Regular.ttf", font_weight
             )
 
-        self.font_color = (255, 255, 255)
+        from util import parse_color
+
+        self.font_color = parse_color(theme.get("primary_color", "white"))
         self.bg_color = (0, 0, 0)
         pygame.font.init()
 
@@ -85,19 +91,29 @@ modules = {
 }
 
 
+def get_preferred_resolution(config):
+    resolution_string = config.get("qboard", {}).get(
+        "preferred_resolution", "1280x1024"
+    )
+    x, y = [int(x) for x in resolution_string.split("x")]
+    return x, y
+
+
 class Dashboard:
     screen = None
 
     def __init__(self, config):
+        x, y = get_preferred_resolution(config)
+
         if running_on_rpi():
             self.screen, self.screen_dimensions = setup_frame_buffer()
         else:
-            self.screen, self.screen_dimensions = setup_dev_screen()
+            self.screen, self.screen_dimensions = setup_dev_screen(x, y)
 
         pygame.mouse.set_visible(False)
 
         self.debug = config["qboard"].get("debug", False)
-        self.theme = Theme()
+        self.theme = Theme(config.get("qboard", {}).get("theme"))
         self.bg_img = None
         self.clear_screen()
         self.price_graph = None

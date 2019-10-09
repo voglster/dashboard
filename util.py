@@ -40,7 +40,7 @@ color_lookup = {
 def parse_color(value):
     if isinstance(value, str):
         # its a string lets see if its in lookup
-        color = color_lookup.get(value)
+        color = color_lookup.get(value.casefold())
         if color:
             return color
         if value.startswith("#"):

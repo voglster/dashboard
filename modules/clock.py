@@ -10,7 +10,7 @@ class Clock:
         self.expected_tz = pytz.timezone(config.get("timezone"))
         self.id = self.config.get("id", "clock")
         font_size = self.config.get("font_size", "large").lower()
-        font_type = self.config.get("font_size", "serif").lower()
+        font_type = self.config.get("font_size", "sans").lower()
         self.font = self.screen.theme.get_font(font_size, font_type)
         self.color = parse_color(
             self.config.get("color", self.screen.theme.get_primary_color())

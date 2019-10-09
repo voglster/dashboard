@@ -47,7 +47,7 @@ class Todoist:
         for text in self.task_text():
             text_surf, text_rect = text_objects(
                 text,
-                self.screen.theme.get_font("small", "serif"),
+                self.screen.theme.get_font("small", "sans"),
                 self.screen.theme.font_color,
             )
             text_rect.top = y
@@ -72,14 +72,14 @@ class Todoist:
 
         all_done_surface, all_done_rect = text_objects(
             "All done!",
-            self.screen.theme.get_font("small", "serif"),
+            self.screen.theme.get_font("small", "sans"),
             self.screen.theme.font_color,
         )
         all_done_rect.topleft = done_image_rect.topright
 
         relax_surf, relax_rect = text_objects(
             "Relax",
-            self.screen.theme.get_font("small", "serif"),
+            self.screen.theme.get_font("small", "sans"),
             self.screen.theme.font_color,
         )
         relax_rect.topleft = all_done_rect.bottomleft
