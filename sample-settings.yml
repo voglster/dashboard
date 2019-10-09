@@ -1,5 +1,6 @@
 qboard:
   timezone: "US/Central"
+  debug: True
 modules:
   - name: "unsplash"
     id: "unsplash1"
@@ -23,10 +24,12 @@ modules:
     run_every: 10 minutes
   - name: "todoist"
     id: "todoist1"
-    anchor_point: "center"
-    anchor_to:
-      id: "screen"
-      point: "center"
+    position:
+      anchor_point: "topleft"
+      anchor_to:
+        id: "weather1"
+        point: "bottomright"
+      offset: 10, 10
     run_every: 1 minutes
     api_key: REDACTED
 

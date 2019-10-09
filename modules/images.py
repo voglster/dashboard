@@ -13,7 +13,7 @@ class UnSplashImage:
         self.prepare()
 
     def prepare(self):
-        with background_file() as (filename, font_color):
+        with background_file(*self.screen.screen_dimensions) as (filename, font_color):
             self.bg_img = pygame.image.load(filename)
 
     def draw(self):
@@ -22,26 +22,48 @@ class UnSplashImage:
 
 
 @contextmanager
-def background_file():
+def background_file(x, y):
     with TemporaryDirectory() as td:
-        yield get_file(td)
+        yield get_file(x, y, td)
 
 
-def blur_image(path):
-    img = Image.open(path)
+def blur_image(img):
     img = img.filter(ImageFilter.GaussianBlur(radius=5))
     img = ImageEnhance.Contrast(img).enhance(0.8)
-    img.save(path, "JPEG")
+    return img
 
 
-def get_file(path="./"):
+def get_file(x, y, path="./"):
     file_path = f"{path}dynamic.jpg"
-    url = "https://source.unsplash.com/1280x1024/?nature"
+    url = "https://source.unsplash.com/random/?nature"
     urllib.request.urlretrieve(url, file_path)
 
-    blur_image(file_path)
+    img = Image.open(file_path)
+    img = funny_crop(img, x, y)
+    img = blur_image(img)
+    img.save(file_path, "JPEG")
 
     return file_path, get_text_color(file_path)
+
+
+def funny_crop(image, ideal_width, ideal_height):
+    width, height = image.size
+    aspect = width / float(height)
+
+    ideal_aspect = ideal_width / float(ideal_height)
+
+    if aspect > ideal_aspect:
+        # Then crop the left and right edges:
+        new_width = int(ideal_aspect * height)
+        offset = (width - new_width) / 2
+        resize = (offset, 0, width - offset, height)
+    else:
+        # ... crop the top and bottom:
+        new_height = int(width / ideal_aspect)
+        offset = (height - new_height) / 2
+        resize = (0, offset, width, height - offset)
+
+    return image.crop(resize).resize((ideal_width, ideal_height), Image.ANTIALIAS)
 
 
 def compute_average_image_color(img):
@@ -72,5 +94,6 @@ def get_text_color(image_path):
 
 
 if __name__ == "__main__":
-    with background_file() as (path, color):
-        print(get_text_color(path))
+    get_file2(1080, 1920)
+    # with background_file() as (path, color):
+    #     print(get_text_color(path))
