@@ -109,6 +109,7 @@ class Dashboard:
             self.screen, self.screen_dimensions = setup_frame_buffer()
         else:
             self.screen, self.screen_dimensions = setup_dev_screen(x, y)
+        self.blit = self.screen.blit
 
         pygame.mouse.set_visible(False)
 
@@ -127,6 +128,8 @@ class Dashboard:
                 0, 0, self.screen_dimensions.width, self.screen_dimensions.height
             )
         }
+        self.show_loading()
+        pygame.display.update()
 
         for module_config in config["modules"]:
             cls = modules[module_config["name"]]
@@ -137,13 +140,19 @@ class Dashboard:
                 count = int(count)
                 getattr(schedule.every(count), time_scale).do(c.prepare)
 
-        self.blit = self.screen.blit
-
         if self.debug:
             from debug import Debug
 
             d = Debug(config["qboard"], self)
             self.modules["debug"] = d
+
+    def show_loading(self):
+        sys_font = pygame.font.SysFont("arial", 25)
+        white = (255, 255, 255)
+        text_surface = sys_font.render("QBoard is starting.. one moment", True, white)
+        r = text_surface.get_rect()
+        r.center = self.rects["screen"].center
+        self.blit(text_surface, r)
 
     def clear_screen(self):
         self.screen.fill(self.theme.bg_color)

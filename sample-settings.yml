@@ -2,7 +2,13 @@ qboard:
   timezone: "US/Central"
   debug: True
   preferred_resolution: 1920x1080
-  strict_resolution: False
+  theme:
+    font_weights:
+      large: 115
+      medium: 80
+      small: 60
+      tiny: 18
+    primary_color: white
 modules:
   - name: "unsplash"
     id: "unsplash1"
