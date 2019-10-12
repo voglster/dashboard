@@ -102,34 +102,32 @@ def get_preferred_resolution(config):
 class Dashboard:
     screen = None
 
-    def __init__(self, config):
+    def __init__(self, config=None):
+        if not config:
+            config = {}
         x, y = get_preferred_resolution(config)
 
         if running_on_rpi():
             self.screen, self.screen_dimensions = setup_frame_buffer()
         else:
             self.screen, self.screen_dimensions = setup_dev_screen(x, y)
-        self.blit = self.screen.blit
-
-        pygame.mouse.set_visible(False)
-
-        self.debug = config["qboard"].get("debug", False)
-        self.theme = Theme(config.get("qboard", {}).get("theme"))
-        self.bg_img = None
-        self.clear_screen()
-        self.price_graph = None
-        self.weather_ico = None
-        self.temperature_text = None
-        self.temperature_text2 = None
-        self.tasks = []
-        self.modules = {}
         self.rects = {
             "screen": pygame.Rect(
                 0, 0, self.screen_dimensions.width, self.screen_dimensions.height
             )
         }
+
+        self.theme = Theme(config.get("qboard", {}).get("theme"))
+
+        self.blit = self.screen.blit
+        pygame.mouse.set_visible(False)
+        self.clear_screen()
         self.show_loading()
         pygame.display.update()
+
+        self.debug = config.get("qboard", {}).get("debug", False)
+        self.tasks = []
+        self.modules = {}
 
         for module_config in config["modules"]:
             cls = modules[module_config["name"]]
