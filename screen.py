@@ -7,6 +7,8 @@ from loguru import logger
 from collections import namedtuple
 import schedule
 from util import running_on_rpi
+from datetime import datetime
+import pytz
 
 from modules.clock import Clock
 from modules.weather import Weather
@@ -92,9 +94,7 @@ modules = {
 
 
 def get_preferred_resolution(config):
-    resolution_string = config.get("qboard", {}).get(
-        "preferred_resolution", "1280x1024"
-    )
+    resolution_string = config.get("preferred_resolution", "1280x1024")
     x, y = [int(x) for x in resolution_string.split("x")]
     return x, y
 
@@ -105,7 +105,8 @@ class Dashboard:
     def __init__(self, config=None):
         if not config:
             config = {}
-        x, y = get_preferred_resolution(config)
+        self.config = config.get("qboard", {})
+        x, y = get_preferred_resolution(self.config)
 
         if running_on_rpi():
             self.screen, self.screen_dimensions = setup_frame_buffer()
@@ -117,32 +118,45 @@ class Dashboard:
             )
         }
 
-        self.theme = Theme(config.get("qboard", {}).get("theme"))
+        self.theme = Theme(self.config.get("theme"))
 
         self.blit = self.screen.blit
         pygame.mouse.set_visible(False)
         self.clear_screen()
         self.show_loading()
         pygame.display.update()
-
-        self.debug = config.get("qboard", {}).get("debug", False)
         self.tasks = []
         self.modules = {}
 
         for module_config in config["modules"]:
-            cls = modules[module_config["name"]]
-            c = cls(module_config, self)
-            self.modules[module_config["id"]] = c
+            module_class = modules[module_config["name"]]
+            module_instance = module_class(module_config, self)
+            self.modules[module_config["id"]] = module_instance
             if module_config.get("run_every"):
                 count, time_scale = module_config["run_every"].split(" ")
                 count = int(count)
-                getattr(schedule.every(count), time_scale).do(c.prepare)
+                getattr(schedule.every(count), time_scale).do(module_instance.prepare)
 
         if self.debug:
             from debug import Debug
 
-            d = Debug(config["qboard"], self)
-            self.modules["debug"] = d
+            self.modules["debug"] = Debug(self.config, self)
+
+    @property
+    def timezone(self):
+        return pytz.timezone(self.config.get("timezone", "US/Central"))
+
+    @property
+    def debug(self):
+        return self.config.get("debug", False)
+
+    @property
+    def utc_time(self):
+        return datetime.utcnow().replace(tzinfo=pytz.utc)
+
+    @property
+    def local_time(self):
+        return self.utc_time.astimezone(self.timezone)
 
     def show_loading(self):
         sys_font = pygame.font.SysFont("arial", 25)
@@ -158,20 +172,7 @@ class Dashboard:
     def refresh_screen(self):
         for module in self.modules.values():
             module.draw()
-        if self.debug:
-            self.draw_module_rects()
         pygame.display.update()
-
-    def draw_module_rects(self):
-        for module_instance_id, rect in self.rects.items():
-            if module_instance_id == "screen":
-                pass
-            pygame.draw.lines(
-                self.screen,
-                (255, 255, 255),
-                True,
-                [rect.topleft, rect.topright, rect.bottomright, rect.bottomleft],
-            )
 
 
 if __name__ == "__main__":

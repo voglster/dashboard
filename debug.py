@@ -1,5 +1,6 @@
 from datetime import datetime
 import pytz
+import pygame
 
 
 class Debug:
@@ -28,3 +29,15 @@ class Debug:
         setattr(text_rect, anchor_point, getattr(parent_rect, parent_anchor_point))
 
         self.screen.blit(text_surf, text_rect)
+        self.draw_module_rects()
+
+    def draw_module_rects(self):
+        for module_instance_id, rect in self.screen.rects.items():
+            if module_instance_id == "screen":
+                pass
+            pygame.draw.lines(
+                self.screen.screen,
+                (255, 255, 255),
+                True,
+                [rect.topleft, rect.topright, rect.bottomright, rect.bottomleft],
+            )

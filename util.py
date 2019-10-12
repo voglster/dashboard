@@ -24,7 +24,7 @@ def set_position(rect, existing_rects, config):
     y = int(y_str)
 
     if x or y:
-        rect = rect.move(x, y)
+        rect.move_ip(x, y)
     return rect
 
 
