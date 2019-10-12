@@ -10,28 +10,55 @@ I have this running on a raspberry pi zero at home
 5. `python screen.py`
 
 # Setting up on a PI
-TBD
+I have tested this on a PI Zero W
+
+make sure you have python installed
+
+`sudo apt install python3 python3-pip`
+
+```bash
+cd ~
+git clone https://github.com/voglster/qboard.git
+cd qboard
+python3 -m venv .venv
+source ./.venv/bin/activate
+pip install -U -r requirements.txt
+sudo -E python screen.py
+```
+
+Note: from what I can tell to write to the framebuffer you need root access, if there is a better way let me know!
+
+
+# Auto starting screen.py on boot
+```bash
+sudo apt install supervisor
+cd ~/.qboard/
+sudo cp qboard.conf /etc/supervisor/conf.d/
+sudo supervisorctl start qboard
+```
+logs can be found at: `/var/log/supervisord/`
+
 
 # Todo:
- - Setup instructions in readme on installing on a pi (zero/p1 and p2+) diff arm architectures!
- - YAML configuration 
-     - Allow more display resolutions
-     - Landscape vs portrait orientation
-     - ~~YAML layout~~
+ - Explain settings.yml in this file
  - Cache folders
      - Global
      - Plugin Specific
      - Plugin Instance Specific
-     - cache the weather icons instead of re-downloading them each time
      - Download free fonts from internet and store in local cache instead of hardcoded fonts
- - Un-splash plugin
-     - Listen to anchor directives
-     - Download higher res images and resize as needed
- - Global config for theme-ing
  - Extend graphing engine used in crypto to be more generic
  - Rotating display based on time (10 secs dashboard, 10 secs price graph)
+ - ~~Un-splash plugin~~
+     - ~~Listen to anchor directives~~
+     - ~~Download higher res images and resize as needed~~
+ - ~~Global config for theme-ing~~
  - ~~Move all images downloads to temp files that cleanup after themselves~~
  - ~~Change to a plugin based system, register now plugins, only load config when needed~~
+ - ~~Setup instructions in readme on installing on a pi (zero/p1 and p2+) diff arm architectures!~~
+ - ~~YAML configuration~~
+     - ~~Allow more display resolutions~~
+     - ~~Landscape vs portrait orientation~~
+     - ~~YAML layout~~
  
  
 # Ideas:

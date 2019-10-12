@@ -261,7 +261,8 @@ class Weather:
     def prepare(self):
         w = self.owm.weather_at_coords(*self.coords).get_weather()
         self.temperature_text = (
-            str(round(w.get_temperature("fahrenheit")["temp"], 1)) + "\N{DEGREE SIGN}F"
+            str(int(round(w.get_temperature("fahrenheit")["temp"], 0)))
+            + "\N{DEGREE SIGN}F"
         )
         self.temperature_text2 = w.get_detailed_status()
         self.weather_code = weather_code_lookup[
