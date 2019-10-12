@@ -51,6 +51,7 @@ qboard:
       large: 115
       medium: 80
       small: 60
+      extra_small: 35
       tiny: 18
     primary_color: white # can be named color, hex color #FFFFFF, or comma separated RGB 255,255,255
   - name: "clock"

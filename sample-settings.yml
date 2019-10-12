@@ -7,6 +7,7 @@ qboard:
       large: 115
       medium: 80
       small: 60
+      extra_small: 35
       tiny: 18
     primary_color: white
 modules:
@@ -23,27 +24,57 @@ modules:
       offset: 0,0
     timezone: "US/Central"
     format: "%I:%M %p"
-  - name: "weather"
-    id: "weather1"
+  - name: crypto
+    id: crypto1
+    fig:
+      alpha: 0.5
+      ax_alpha: 0
+      width: 500
+      height: 250
     position:
-      anchor_point: "topleft"
+      anchor_point: "bottomright"
       anchor_to:
         id: "screen"
-        point: "topleft"
-      offset: 0,0
-    api_key: REDACTED
-    gps: 32.942664, -97.191749
-    run_every: 10 minutes
-  - name: "todoist"
-    id: "todoist1"
-    position:
-      anchor_point: "topleft"
-      anchor_to:
-        id: "weather1"
         point: "bottomright"
-      offset: 10, 10
     run_every: 1 minutes
-    api_key: REDACTED
+    coin: BTC
+  - name: crypto
+    id: crypto2
+    fig:
+      alpha: 0.5
+      ax_alpha: 0
+      width: 500
+      height: 250
+    position:
+      anchor_point: "bottomleft"
+      anchor_to:
+        id: "screen"
+        point: "bottomleft"
+    run_every: 1 minutes
+    coin: ETH
+
+#  - name: "weather"
+#    id: "weather1"
+#    position:
+#      anchor_point: "topleft"
+#      anchor_to:
+#        id: "screen"
+#        point: "topleft"
+#      offset: 0,0
+#    api_key: REDACTED
+#    gps: 32.942664, -97.191749
+#    run_every: 10 minutes
+
+#  - name: "todoist"
+#    id: "todoist1"
+#    position:
+#      anchor_point: "topleft"
+#      anchor_to:
+#        id: "weather1"
+#        point: "bottomright"
+#      offset: 10, 10
+#    run_every: 1 minutes
+#    api_key: REDACTED
 
 
 

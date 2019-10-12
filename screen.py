@@ -14,6 +14,7 @@ from modules.clock import Clock
 from modules.weather import Weather
 from modules.images import UnSplashImage
 from modules.todo import Todoist
+from modules.crypto import Crypto
 
 ScreenDim = namedtuple("ScreenDim", "width, height")
 
@@ -49,7 +50,13 @@ def setup_dev_screen(width=1280, height=1024):
     return screen, dims
 
 
-default_font_weights = {"large": 115, "medium": 80, "small": 60, "tiny": 18}
+default_font_weights = {
+    "large": 115,
+    "medium": 80,
+    "small": 60,
+    "extra_small": 35,
+    "tiny": 18,
+}
 
 
 class Theme:
@@ -90,6 +97,7 @@ modules = {
     "weather": Weather,
     "unsplash": UnSplashImage,
     "todoist": Todoist,
+    "crypto": Crypto,
 }
 
 
@@ -129,6 +137,10 @@ class Dashboard:
         self.modules = {}
 
         for module_config in config["modules"]:
+            module_name = module_config["name"]
+            module_id = module_config["id"]
+            logger.info(f"Loading module {module_name} for id {module_id}")
+
             module_class = modules[module_config["name"]]
             module_instance = module_class(module_config, self)
             self.modules[module_config["id"]] = module_instance

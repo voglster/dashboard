@@ -7,7 +7,7 @@ from util import set_position
 
 tz = pytz.timezone("US/Central")
 
-fields = ["content", "priority", "day_order"]
+fields = ["content", "priority", "child_order"]
 
 
 def text_objects(text, font, color=(255, 255, 255)):
@@ -117,7 +117,7 @@ def get_next_tasks(count=3, api_key=None):
     ]
 
     todays_items = sorted(
-        todays_items, key=lambda x: x["day_order"] + (4 - x["priority"] * 1000)
+        todays_items, key=lambda x: x["child_order"] + (4 - x["priority"] * 1000)
     )[:count]
 
     todays_items = [{field: x[field] for field in fields} for x in todays_items]
