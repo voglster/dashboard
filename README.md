@@ -23,6 +23,7 @@ cd qboard
 python3 -m venv .venv
 source ./.venv/bin/activate
 pip install -U -r requirements.txt
+cp sample-settings.yml settings.yml
 sudo -E python screen.py
 ```
 
@@ -38,8 +39,46 @@ sudo supervisorctl start qboard
 ```
 logs can be found at: `/var/log/supervisord/`
 
+# Settings.yml
+each module has its own settings and the entire dashboard is saved in settings.yml
+```YAML
+qboard:
+  timezone: "US/Central"  # optional any pytz timezone specification for local time
+  debug: True # optional, displays commit hash in bottom left and bounding boxes for modules
+  preferred_resolution: 1920x1080 # optional, if running not on a pi, defines the window size
+  theme: # optional, override font sizes/colors
+    font_weights:
+      large: 115
+      medium: 80
+      small: 60
+      tiny: 18
+    primary_color: white # can be named color, hex color #FFFFFF, or comma separated RGB 255,255,255
+  - name: "clock"
+    id: "clock1"
+    position: #all modules should support positioning like this if they can be positioned
+      anchor_point: "topright" # which part of modules box should be the attached
+      anchor_to:
+        id: "screen" # the id of the module you anchor this module to OR screen for whole screen
+        point: "topright" # which part of target you want to put your anchor point to
+      offset: 0,0 # how much to offset from anchor point in pixels (x, y)
+```
+
+#### Anchor Points
+These are just the pygame rect names but pretty self explanatory, options:
+ - topleft
+ - bottomleft
+ - topright
+ - bottomright
+ - midtop
+ - midleft
+ - midbottom
+ - midright
+ - center
+
 
 # Todo:
+While I try and keep this up to date,
+The most up to date todo can be found here [Trello Board](https://trello.com/b/f9JI6Dz7/qboard)
  - Explain settings.yml in this file
  - Cache folders
      - Global
