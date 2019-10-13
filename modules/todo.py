@@ -10,6 +10,36 @@ tz = pytz.timezone("US/Central")
 fields = ["content", "priority", "child_order"]
 
 
+def remove_links(task_string):
+    """
+    Removes any links in a task text
+    :param task_string: the task you want to alter
+    :return: the altered string
+    """
+    if "://" in task_string:
+        colon_idx = task_string.index("://")
+        before_part = task_string[0:colon_idx]
+        for idx, char in enumerate(reversed(before_part)):
+            if char == " ":
+                url_start_idx = colon_idx - idx
+                break
+        else:
+            url_start_idx = 0
+
+        url_end = task_string.find(" ", colon_idx)
+        paren_start = task_string.find("(", url_end)
+        paren_end = task_string.find(")", paren_start)
+
+        if paren_start != -1 and paren_end != -1:
+            task_string = (
+                task_string[0:url_start_idx]
+                + task_string[paren_start + 1 : paren_end]
+                + task_string[paren_end + 1 :]
+            )
+
+    return task_string
+
+
 def text_objects(text, font, color=(255, 255, 255)):
     text_surface = font.render(text, True, color)
     return text_surface, text_surface.get_rect()
@@ -121,4 +151,8 @@ def get_next_tasks(count=3, api_key=None):
     )[:count]
 
     todays_items = [{field: x[field] for field in fields} for x in todays_items]
+
+    for item in todays_items:
+        item["content"] = remove_links(item["content"])
+
     return todays_items
