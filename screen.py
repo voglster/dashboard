@@ -15,6 +15,7 @@ from modules.weather import Weather
 from modules.images import UnSplashImage
 from modules.todo import Todoist
 from modules.crypto import Crypto
+from modules.colorbg import ColorBG
 
 ScreenDim = namedtuple("ScreenDim", "width, height")
 
@@ -98,6 +99,7 @@ modules = {
     "unsplash": UnSplashImage,
     "todoist": Todoist,
     "crypto": Crypto,
+    "color_bg": ColorBG,
 }
 
 
