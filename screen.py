@@ -1,14 +1,17 @@
 import os
 import sys
-from itertools import product
 import pygame
 import time
+import json
 from loguru import logger
 from collections import namedtuple
 import schedule
+
 from util import running_on_rpi
 from datetime import datetime
 import pytz
+
+from theme import Theme
 
 from modules.clock import Clock
 from modules.weather import Weather
@@ -16,6 +19,7 @@ from modules.images import UnSplashImage
 from modules.todo import Todoist
 from modules.crypto import Crypto
 from modules.colorbg import ColorBG
+from modules.static_text import StaticText
 
 ScreenDim = namedtuple("ScreenDim", "width, height")
 
@@ -51,48 +55,6 @@ def setup_dev_screen(width=1280, height=1024):
     return screen, dims
 
 
-default_font_weights = {
-    "large": 115,
-    "medium": 80,
-    "small": 60,
-    "extra_small": 35,
-    "tiny": 18,
-}
-
-
-class Theme:
-    def __init__(self, theme):
-        self.fonts = {}
-        theme = theme or {}
-
-        sizes = theme.get("font_weights", default_font_weights)
-
-        types = [
-            ("./media/fonts/LiberationMono-Regular.ttf", "mono"),
-            ("./media/fonts/LiberationSerif-Regular.ttf", "serif"),
-            ("./media/fonts/LiberationSans-Regular.ttf", "sans"),
-        ]
-        for (size, font_weight), (path, font_type) in product(sizes.items(), types):
-            self.fonts[(size, font_type)] = pygame.font.Font(path, font_weight)
-
-        for size, font_weight in sizes.items():
-            self.fonts[(size, None)] = pygame.font.Font(
-                "./media/fonts/LiberationMono-Regular.ttf", font_weight
-            )
-
-        from util import parse_color
-
-        self.font_color = parse_color(theme.get("primary_color", "white"))
-        self.bg_color = (0, 0, 0)
-        pygame.font.init()
-
-    def get_font(self, size, font_type=None):
-        return self.fonts.get((size, font_type))
-
-    def get_primary_color(self):
-        return self.font_color
-
-
 modules = {
     "clock": Clock,
     "weather": Weather,
@@ -100,6 +62,7 @@ modules = {
     "todoist": Todoist,
     "crypto": Crypto,
     "color_bg": ColorBG,
+    "static_text": StaticText,
 }
 
 
