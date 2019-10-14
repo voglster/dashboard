@@ -234,6 +234,14 @@ weather_code_lookup = {
 }
 
 
+def arrange_rects(point, icon_rect, temp_rect, description_rect):
+    icon_rect.topleft = point
+    temp_rect.midleft = icon_rect.midright
+    temp_rect.move_ip(10, 0)
+    description_rect.topleft = icon_rect.bottomleft
+    description_rect.move_ip(0, 10)
+
+
 class Weather:
     def __init__(self, config, screen):
         self.config = config
@@ -269,13 +277,6 @@ class Weather:
             (w.get_weather_code(), self.day_night())
         ]
 
-    def arrange_rects(self, point, icon_rect, temp_rect, description_rect):
-        icon_rect.topleft = point
-        temp_rect.midleft = icon_rect.midright
-        temp_rect.move_ip(10, 0)
-        description_rect.topleft = icon_rect.bottomleft
-        description_rect.move_ip(0, 10)
-
     def draw(self):
         theme = self.screen.theme
         font = self.screen.theme.get_font("small", "sans")
@@ -291,14 +292,14 @@ class Weather:
             description_surf, description_rect = text_objects(
                 self.temperature_text2, font, theme.font_color
             )
-            self.arrange_rects((0, 0), icon_rect, temperature_rect, description_rect)
+            arrange_rects((0, 0), icon_rect, temperature_rect, description_rect)
 
             entire_rect = icon_rect.unionall((temperature_rect, description_rect))
 
             entire_rect = set_position(entire_rect, self.screen.rects, self.config)
             self.screen.rects[self.config["id"]] = entire_rect
 
-            self.arrange_rects(
+            arrange_rects(
                 entire_rect.topleft, icon_rect, temperature_rect, description_rect
             )
 
