@@ -13,7 +13,11 @@ class UnSplashImage:
         self.prepare()
 
     def prepare(self):
-        with background_file(*self.screen.screen_dimensions) as (filename, font_color):
+        query = self.config.get("query", "nature")
+        with background_file(*self.screen.screen_dimensions, query) as (
+            filename,
+            font_color,
+        ):
             self.bg_img = pygame.image.load(filename)
 
     def draw(self):
@@ -22,9 +26,9 @@ class UnSplashImage:
 
 
 @contextmanager
-def background_file(x, y):
+def background_file(x, y, query):
     with TemporaryDirectory() as td:
-        yield get_file(x, y, td)
+        yield get_file(x, y, path=td, query=query)
 
 
 def blur_image(img):
@@ -33,9 +37,9 @@ def blur_image(img):
     return img
 
 
-def get_file(x, y, path="./"):
+def get_file(x, y, path="./", query="nature"):
     file_path = f"{path}dynamic.jpg"
-    url = "https://source.unsplash.com/random/?nature"
+    url = f"https://source.unsplash.com/random/?{query}"
     urllib.request.urlretrieve(url, file_path)
 
     img = Image.open(file_path)
@@ -94,6 +98,6 @@ def get_text_color(image_path):
 
 
 if __name__ == "__main__":
-    get_file2(1080, 1920)
+    get_file(1080, 1920)
     # with background_file() as (path, color):
     #     print(get_text_color(path))
