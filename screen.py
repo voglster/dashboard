@@ -72,18 +72,26 @@ def get_preferred_resolution(config):
     return x, y
 
 
+def load_remote_config(config, width, height):
+    from registration import get_config
+
+    try:
+        return get_config(width, height)
+    except:
+        return config
+
+
 class Dashboard:
     screen = None
 
-    def __init__(self, config=None):
-        if not config:
-            config = {}
-        self.config = config.get("qboard", {})
-        x, y = get_preferred_resolution(self.config)
+    def __init__(self):
 
         if running_on_rpi():
             self.screen, self.screen_dimensions = setup_frame_buffer()
         else:
+            from settings import config
+
+            x, y = get_preferred_resolution(config.get("qboard", {}))
             self.screen, self.screen_dimensions = setup_dev_screen(x, y)
         self.rects = {
             "screen": pygame.Rect(
@@ -91,28 +99,55 @@ class Dashboard:
             )
         }
 
-        self.theme = Theme(self.config.get("theme"))
-
         self.blit = self.screen.blit
         pygame.mouse.set_visible(False)
-        self.clear_screen()
+        self.screen.fill((0, 0, 0))
         self.show_loading()
         pygame.display.update()
         self.tasks = []
         self.modules = {}
+        self.theme = None
+        self.config = {}
+        self.load_config()
 
-        for module_config in config["modules"]:
+    def load_config(self):
+        old_config_string = json.dumps(self.config)
+
+        from settings import config
+
+        self.config = self.config or config
+
+        if "modules" not in config or config.get("qboard", {}).get("load_remote"):
+            config = load_remote_config(self.config, *self.screen_dimensions)
+
+        new_config_string = json.dumps(config)
+
+        if old_config_string == new_config_string:
+            logger.info("Config did not change, skipping reload")
+            return
+        logger.info("New config found")
+        self.config = config
+
+        schedule.clear("module_tasks")
+        self.theme = Theme(config.get("qboard").get("theme"))
+
+        self.modules = {}
+
+        self.clear_screen()
+
+        for module_config in config.get("modules", {}):
             module_name = module_config["name"]
             module_id = module_config["id"]
             logger.info(f"Loading module {module_name} for id {module_id}")
-
             module_class = modules[module_config["name"]]
             module_instance = module_class(module_config, self)
             self.modules[module_config["id"]] = module_instance
             if module_config.get("run_every"):
                 count, time_scale = module_config["run_every"].split(" ")
                 count = int(count)
-                getattr(schedule.every(count), time_scale).do(module_instance.prepare)
+                getattr(schedule.every(count), time_scale).do(
+                    module_instance.prepare
+                ).tag("module_tasks")
 
         if self.debug:
             from debug import Debug
@@ -147,25 +182,26 @@ class Dashboard:
         self.screen.fill(self.theme.bg_color)
 
     def refresh_screen(self):
-        for module in self.modules.values():
+        for key, module in self.modules.items():
             module.draw()
         pygame.display.update()
 
+    def run_forever(self):
+        schedule.every(1).second.do(self.refresh_screen)
+        schedule.every(30).seconds.do(self.load_config)
+        while True:
+            schedule.run_pending()
+            time.sleep(0.05)
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key in [pygame.K_q, pygame.K_ESCAPE]:
+                        sys.exit(0)
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit(0)
+
 
 if __name__ == "__main__":
-    from settings import config
-
-    db = Dashboard(config)
-    schedule.every(1).second.do(db.refresh_screen)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(0.05)
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key in [pygame.K_q, pygame.K_ESCAPE]:
-                    sys.exit(0)
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit(0)
+    db = Dashboard()
+    db.run_forever()
