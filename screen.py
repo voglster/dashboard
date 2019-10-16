@@ -2,14 +2,17 @@ import os
 import sys
 import pygame
 import time
+from datetime import datetime
+import pytz
 import json
+from pathlib import Path
+
 from loguru import logger
 from collections import namedtuple
 import schedule
+import yaml
 
 from util import running_on_rpi
-from datetime import datetime
-import pytz
 
 from theme import Theme
 
@@ -20,6 +23,8 @@ from modules.todo import Todoist
 from modules.crypto import Crypto
 from modules.colorbg import ColorBG
 from modules.static_text import StaticText
+
+from remote_server import get_config, server_is_alive
 
 ScreenDim = namedtuple("ScreenDim", "width, height")
 
@@ -72,38 +77,46 @@ def get_preferred_resolution(config):
     return x, y
 
 
-def load_remote_config(config, width, height):
-    from registration import get_config
+def setup_display():
+    if running_on_rpi():
+        screen, dimensions = setup_frame_buffer()
+    else:
+        from settings import config
 
-    try:
-        return get_config(width, height)
-    except:
-        return config
+        x, y = get_preferred_resolution(config.get("qboard", {}))
+        screen, dimensions = setup_dev_screen(x, y)
+    rects = {"screen": pygame.Rect(0, 0, dimensions.width, dimensions.height)}
+
+    pygame.mouse.set_visible(False)
+    return screen, dimensions, rects
+
+
+def load_config(current_config, dimensions):
+    from settings import config
+
+    current_config = current_config or config
+
+    if "modules" not in config or config.get("qboard", {}).get("load_remote"):
+        if server_is_alive():
+            logger.info("loading config from remote server")
+            current_config = get_config(*dimensions)
+        else:
+            logger.info("server offline")
+            cached_config = Path(".cache/remote_config.yml")
+            if cached_config.is_file():
+                logger.info("found cached config and loading")
+                with open(cached_config) as f:
+                    current_config = yaml.safe_load(f)
+    return current_config
 
 
 class Dashboard:
     screen = None
 
     def __init__(self):
-
-        if running_on_rpi():
-            self.screen, self.screen_dimensions = setup_frame_buffer()
-        else:
-            from settings import config
-
-            x, y = get_preferred_resolution(config.get("qboard", {}))
-            self.screen, self.screen_dimensions = setup_dev_screen(x, y)
-        self.rects = {
-            "screen": pygame.Rect(
-                0, 0, self.screen_dimensions.width, self.screen_dimensions.height
-            )
-        }
-
+        self.screen, self.screen_dimensions, self.rects = setup_display()
         self.blit = self.screen.blit
-        pygame.mouse.set_visible(False)
-        self.screen.fill((0, 0, 0))
         self.show_loading()
-        pygame.display.update()
         self.tasks = []
         self.modules = {}
         self.theme = None
@@ -112,19 +125,13 @@ class Dashboard:
 
     def load_config(self):
         old_config_string = json.dumps(self.config)
-
-        from settings import config
-
-        self.config = self.config or config
-
-        if "modules" not in config or config.get("qboard", {}).get("load_remote"):
-            config = load_remote_config(self.config, *self.screen_dimensions)
-
+        config = load_config(self.config, self.screen_dimensions)
         new_config_string = json.dumps(config)
 
         if old_config_string == new_config_string:
             logger.info("Config did not change, skipping reload")
             return
+
         logger.info("New config found")
         self.config = config
 
@@ -171,12 +178,14 @@ class Dashboard:
         return self.utc_time.astimezone(self.timezone)
 
     def show_loading(self):
+        self.screen.fill((0, 0, 0))
         sys_font = pygame.font.SysFont("arial", 25)
         white = (255, 255, 255)
         text_surface = sys_font.render("QBoard is starting.. one moment", True, white)
         r = text_surface.get_rect()
         r.center = self.rects["screen"].center
         self.blit(text_surface, r)
+        pygame.display.update()
 
     def clear_screen(self):
         self.screen.fill(self.theme.bg_color)
@@ -203,5 +212,4 @@ class Dashboard:
 
 
 if __name__ == "__main__":
-    db = Dashboard()
-    db.run_forever()
+    Dashboard().run_forever()

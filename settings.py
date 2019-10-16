@@ -6,10 +6,9 @@ load_dotenv()
 from os import getenv
 from yaml import load, FullLoader
 
-# your config here
 qboard_settings_path = Path(getenv("QBOARD_SETTINGS_PATH", "./settings.yml"))
 
-registration_url = getenv("REGISTRATION_URL", r"http://localhost:8000/get_config")
+registration_url = getenv("REGISTRATION_URL", r"https://qapi.cld.vogelcc.com/")
 
 if not qboard_settings_path.is_file():
     config = {

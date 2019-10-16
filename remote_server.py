@@ -1,10 +1,8 @@
 import os
 import uuid
-import util
 from pathlib import Path
 from settings import registration_url
 import requests
-import json
 import yaml
 
 os.makedirs(".cache", exist_ok=True)
@@ -24,7 +22,7 @@ def get_unique_id():
 
 def get_config(width, height):
     response = requests.post(
-        registration_url,
+        f"{registration_url}get_config",
         json={"unique_id": get_unique_id(), "width": width, "height": height},
     )
 
@@ -34,6 +32,14 @@ def get_config(width, height):
         f.write(yaml.dump(remote_config))
 
     return remote_config
+
+
+def server_is_alive():
+    try:
+        requests.post(f"{registration_url}ping", timeout=2)
+        return True
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        return False
 
 
 if __name__ == "__main__":
