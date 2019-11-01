@@ -17,7 +17,7 @@ from util import running_on_rpi
 from theme import Theme
 
 from modules.clock import Clock
-from modules.weather import Weather
+from modules.weather import WeatherData, CurrentWeather
 from modules.images import UnSplashImage
 from modules.todo import Todoist
 from modules.crypto import Crypto
@@ -62,7 +62,9 @@ def setup_dev_screen(width=1280, height=1024):
 
 modules = {
     "clock": Clock,
-    "weather": Weather,
+    "weather_data": WeatherData,
+    "weather": CurrentWeather,
+    "current_weather": CurrentWeather,
     "unsplash": UnSplashImage,
     "todoist": Todoist,
     "crypto": Crypto,
@@ -129,6 +131,7 @@ class Dashboard:
         self.modules = {}
         self.theme = None
         self.config = {}
+        self.data = {}
         self.load_config()
 
     def load_config(self):
@@ -206,7 +209,8 @@ class Dashboard:
 
     def refresh_screen(self):
         for key, module in self.modules.items():
-            module.draw()
+            if hasattr(module, "draw"):
+                module.draw()
         pygame.display.update()
 
     def run_forever(self):

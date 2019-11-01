@@ -36,8 +36,8 @@ def get_config(width, height):
 
 def server_is_alive():
     try:
-        requests.post(f"{registration_url}ping", timeout=2)
-        return True
+        resp = requests.post(f"{registration_url}ping", timeout=2)
+        return "pong" in resp.text.lower()
     except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
         return False
 

@@ -3,11 +3,6 @@ import pygame
 from util import set_position
 
 
-def text_objects(text, font, color):
-    text_surface = font.render(text, True, color)
-    return text_surface, text_surface.get_rect()
-
-
 weather_code_lookup = {
     (200, None): 60200,
     (200, "day"): 60200,
@@ -234,64 +229,81 @@ weather_code_lookup = {
 }
 
 
-def arrange_rects(point, icon_rect, temp_rect, description_rect):
-    icon_rect.topleft = point
-    temp_rect.midleft = icon_rect.midright
-    temp_rect.move_ip(10, 0)
-    description_rect.topleft = icon_rect.bottomleft
-    description_rect.move_ip(0, 10)
+def parse_gps(gps_string: str):
+    lat, long = gps_string.split(",")
+    lat = float(lat)
+    long = float(long)
+    return lat, long
 
 
-class Weather:
+class WeatherData:
     def __init__(self, config, screen):
         self.config = config
         self.screen = screen
-        self.weather_icon = None
-        self.temperature_text = None
-        self.temperature_text2 = None
-        self.weather_ico = None
-        self.weather_code = None
         self.owm = pyowm.OWM(config["api_key"])
+        self.coords = parse_gps(config["gps"])
+        self.prepare()
+
+    def prepare(self):
+        self.screen.data[self.config.get("weather_key", "weather")] = {
+            "current": self.owm.weather_at_coords(*self.coords).get_weather(),
+            "forecast": self.owm.three_hours_forecast_at_coords(*self.coords),
+        }
+
+
+def arrange_rects(starting_point, icon, temp, desc):
+    icon.topleft = starting_point
+    temp.midleft = icon.midright
+    temp.move_ip(10, 0)
+    desc.topleft = icon.bottomleft
+    desc.move_ip(0, 10)
+
+
+class CurrentWeather:
+    def __init__(self, config, screen):
+        self.config = config
+        self.screen = screen
         self.weather_font = pygame.font.Font(
             "./media/fonts/owfont-regular.ttf", config.get("icon_size", 112)
         )
-        lat, long = config["gps"].split(",")
-        lat = float(lat)
-        long = float(long)
-
-        self.coords = (lat, long)
-
-        self.prepare()
+        self.theme = self.screen.theme
+        self.font = self.theme.get_font("small", "sans")
 
     def day_night(self):
         return "day" if 6 < self.screen.local_time.hour < 18 else "night"
 
-    def prepare(self):
-        w = self.owm.weather_at_coords(*self.coords).get_weather()
-        self.temperature_text = (
-            str(int(round(w.get_temperature("fahrenheit")["temp"], 0)))
-            + "\N{DEGREE SIGN}F"
-        )
-        self.temperature_text2 = w.get_detailed_status()
-        self.weather_code = weather_code_lookup[
-            (w.get_weather_code(), self.day_night())
+    def text(self, text):
+        surface = self.font.render(text, True, self.theme.font_color)
+        rect = surface.get_rect()
+        return surface, rect
+
+    def temperature(self):
+        current_temperature = self.weather_data.get_temperature("fahrenheit")["temp"]
+        temperature_text = f"{current_temperature:.0f}\N{DEGREE SIGN}F"
+        return self.text(temperature_text)
+
+    def description(self):
+        return self.text(self.weather_data.get_detailed_status())
+
+    def icon(self):
+        weather_code = weather_code_lookup[
+            (self.weather_data.get_weather_code(), self.day_night())
         ]
+        surface = self.weather_font.render(chr(weather_code), True, (255, 255, 255))
+        rect = surface.get_rect()
+        return surface, rect
+
+    @property
+    def weather_data(self):
+        key = self.config.get("weather_key", "weather")
+        return self.screen.data.get(key, {}).get("current")
 
     def draw(self):
-        theme = self.screen.theme
-        font = self.screen.theme.get_font("small", "sans")
+        if self.weather_data:
+            icon_surface, icon_rect = self.icon()
+            temperature_surface, temperature_rect = self.temperature()
+            description_surf, description_rect = self.description()
 
-        if self.temperature_text and self.weather_code is not None:
-            s = self.weather_font.render(chr(self.weather_code), True, (255, 255, 255))
-            icon_rect = s.get_rect()
-
-            temperature_text_surface, temperature_rect = text_objects(
-                self.temperature_text, font, theme.font_color
-            )
-
-            description_surf, description_rect = text_objects(
-                self.temperature_text2, font, theme.font_color
-            )
             arrange_rects((0, 0), icon_rect, temperature_rect, description_rect)
 
             entire_rect = icon_rect.unionall((temperature_rect, description_rect))
@@ -303,6 +315,6 @@ class Weather:
                 entire_rect.topleft, icon_rect, temperature_rect, description_rect
             )
 
-            self.screen.blit(s, icon_rect)
-            self.screen.blit(temperature_text_surface, temperature_rect)
+            self.screen.blit(icon_surface, icon_rect)
+            self.screen.blit(temperature_surface, temperature_rect)
             self.screen.blit(description_surf, description_rect)
