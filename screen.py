@@ -110,6 +110,14 @@ def load_config(current_config, dimensions):
     return current_config
 
 
+def schedule_any_module_recurring_tasks(config, module, tag="module_tasks"):
+    if config.get("run_every"):
+        count, time_scale = config["run_every"].split(" ")
+        count = int(count)
+        task = module.prepare
+        getattr(schedule.every(count), time_scale).do(task).tag(tag)
+
+
 class Dashboard:
     screen = None
 
@@ -142,24 +150,30 @@ class Dashboard:
 
         self.clear_screen()
 
-        for module_config in config.get("modules", {}):
+        seen_module_ids = set()
+
+        for module_index, module_config in enumerate(config.get("modules", {})):
             module_name = module_config["name"]
             module_id = module_config["id"]
+            if module_id in seen_module_ids:
+                logger.warning(
+                    f"Duplicate module id found in config! '{module_id}' "
+                    f"at index {module_index} this is probably a mistake in your config"
+                )
+            seen_module_ids.add(module_id)
             logger.info(f"Loading module {module_name} for id {module_id}")
             module_class = modules[module_config["name"]]
             module_instance = module_class(module_config, self)
             self.modules[module_config["id"]] = module_instance
-            if module_config.get("run_every"):
-                count, time_scale = module_config["run_every"].split(" ")
-                count = int(count)
-                getattr(schedule.every(count), time_scale).do(
-                    module_instance.prepare
-                ).tag("module_tasks")
+            schedule_any_module_recurring_tasks(module_config, module_instance)
 
         if self.debug:
-            from debug import Debug
+            self._load_debug()
 
-            self.modules["debug"] = Debug(self.config, self)
+    def _load_debug(self):
+        from debug import Debug
+
+        self.modules["debug"] = Debug(self.config, self)
 
     @property
     def timezone(self):

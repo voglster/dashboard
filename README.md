@@ -1,5 +1,7 @@
 Dashboard App that turns a raspberry pi and a tv into a useful application
 
+Looking for help? or want to talk to me? [Discord](https://discord.gg/RCNq2ap)
+
 I have this running on a raspberry pi zero at home
 
 # Quick Start to Run on your own machine without a PI:
